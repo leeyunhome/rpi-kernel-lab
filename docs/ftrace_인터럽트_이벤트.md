@@ -75,6 +75,45 @@ echo 1 > /sys/kernel/debug/tracing/tracing_on
 
 이번 실습 내내 명령어 일부가 잘리거나(`for f in /sys/kernel` 앞부분 소실 등) 한글 낱자가 섞여 들어가는 문제가 반복됐다. `tmux`의 `escape-time`(500, 기본값)을 확인했으나 정상이었고, 라즈베리파이는 중계 서버를 거치지 않는 단일 홉 연결이라 지연 문제도 아니었다. 화면에 `ㅊㅁ`, `ㄷ` 같은 한글 조합 낱자가 튀어나온 것으로 보아, **Windows 클라이언트 쪽 한/영 입력기(IME)가 원인**으로 추정된다. 붙여넣기 대신 직접 타이핑하니 재현되지 않았다.
 
+## 5.7.3 대체 — IPI의 인터럽트 핸들러 함수 찾기
+
+참고 자료는 `name=3f00b880.mailbox` 로그를 보고 핸들러 함수(`bcm2835_mbox_irq`)를 찾는다. 방법은: `name=`에 찍히는 문자열이 `request_irq()` 계열 함수에 넘긴 이름 인자 그대로이므로, 그 이름을 소스에서 검색해 등록 코드를 찾고, 같은 호출 안에 있는 핸들러 함수를 확인한다.
+
+우리 캡처에는 `name=IPI`가 나왔다. mailbox와 달리 장치트리 노드가 아니라 아키텍처 레벨 구조라, 이름으로 검색하는 방식이 안 통한다 — 대신 "IPI를 등록하는 코드가 어디 있는가"로 직접 찾았다.
+
+```
+$ grep -n "IPI\|ipi_handler\|set_smp_ipi_range" arch/arm64/kernel/smp.c
+1004:static irqreturn_t ipi_handler(int irq, void *data)
+1067:void __init set_smp_ipi_range(int ipi_base, int n)
+1083:            err = request_percpu_irq(ipi_base + i, ipi_handler, ...)
+```
+
+`request_percpu_irq()`(코어마다 하나씩 등록하는 버전)로 **`ipi_handler()`**가 등록돼 있다. mailbox가 `request_irq()` 하나로 끝나는 것과 달리, IPI는 핸들러 안에서 한 번 더 갈라진다:
+
+```c
+static irqreturn_t ipi_handler(int irq, void *data)
+{
+    do_handle_IPI(irq - ipi_irq_base);
+    return IRQ_HANDLED;
+}
+```
+
+```c
+switch (ipinr) {
+case IPI_RESCHEDULE:   scheduler_ipi(); break;
+case IPI_CALL_FUNC:    generic_smp_call_function_interrupt(); break;
+case IPI_TIMER:        tick_receive_broadcast(); break;
+...
+```
+
+`/proc/interrupts`에서 본 `IPI1: Function call interrupts`(950만 회)가 정확히 `IPI_CALL_FUNC` 케이스다. sysfs에서 `actions`가 8개 다 똑같이 `IPI`로만 보였던 이유도 여기서 확인된다 — 세부 구분(재스케줄링/함수호출/타이머 등)은 `ipinr` 번호로만 나뉘고, `action->name`은 전부 `"IPI"`로 하드코딩돼 있기 때문이다.
+
+| | mailbox | IPI |
+|---|---|---|
+| 등록 함수 | `request_irq()` | `request_percpu_irq()` (코어별 등록) |
+| 핸들러 | `bcm2835_mbox_irq()` — 그대로 끝 | `ipi_handler()` → `do_handle_IPI()` → 8갈래 분기 |
+| `action->name` | 장치별로 고유 (`fe00b880.mailbox`) | 전부 동일 (`"IPI"`) |
+
 ## 스크립트로 재현 — `scripts/irq_ftrace.sh`
 
 수동으로 한 줄씩 실행하며 문제를 다 잡은 뒤, 검증된 순서를 `scripts/irq_ftrace.sh`로 정리했다 (`sched_switch`는 기본으로 끄도록 만들어, 위에서 겪은 버퍼 flood를 원천 차단). 실행 후 절차:
@@ -115,6 +154,22 @@ cat /sys/kernel/debug/tracing/trace | tail -60
 entry 시각 간격도 거의 일정하다 (340747 → 340952 → 341157, 약 200~205마이크로초 간격). CPU3이 idle 상태인데도 다른 코어로부터 주기적으로 뭔가를 요청받고 있다는 뜻 — 정확한 발신 주체는 추가 확인이 필요하지만, 스케줄러의 로드밸런싱이나 타이머 관련 코어 간 동기화로 추정된다.
 
 같은 캡처에서 `arch_timer`(IRQ 11)는 **네 코어 모두에서 같은 마이크로초에 동시에** entry가 찍혔다 — 각 코어가 독립적인 자기 타이머를 갖고 있어서 스케줄러 틱이 코어별로 동시에 울리기 때문이다 (`/proc/interrupts`에서 `arch_timer`가 코어별로 고르게 분산돼 있던 것과 같은 현상을 시간축에서 재확인한 것).
+
+## `trace_irq_handler_entry()` 호출 지점 — 참고 자료엔 없던 부분
+
+참고 자료는 `irq_handler_entry`/`irq_handler_exit` 로그가 `kernel/irq/handle.c`의 `__handle_irq_event_percpu()` 한 곳에서 나온다고 설명한다. tracepoint 이름(`irq_handler_entry`)을 실제 호출 함수명(`trace_irq_handler_entry`)으로 바꿔 소스 전체를 검색해보면, 그 설명이 **일부만 맞다**는 게 드러난다.
+
+```
+$ grep -rn "trace_irq_handler_entry(" linux/kernel/
+kernel/irq/handle.c:157:      trace_irq_handler_entry(irq, action);
+kernel/irq/chip.c:760: trace_irq_handler_entry(irq, action);
+kernel/irq/chip.c:941:         trace_irq_handler_entry(irq, action);
+kernel/irq/chip.c:976: trace_irq_handler_entry(irq, action);
+```
+
+`handle.c:157`은 참고 자료가 설명한 지점과 일치하지만, **`kernel/irq/chip.c`에서 3곳이 더 호출**하고 있다. `chip.c`는 `handle_simple_irq`, `handle_edge_irq`, `handle_level_irq` 등 **인터럽트 트리거 방식(Level/Edge)별로 다른 처리 함수**를 담은 파일이다 — 일부 처리 경로는 `__handle_irq_event_percpu()`를 거치지 않고 자체적으로 핸들러를 호출하면서 tracepoint도 따로 찍는 구조로 추정된다.
+
+**정리**: "이벤트 이름 → `trace_<이벤트이름>()` 함수명 → 소스 전체 grep"이라는 방법 자체는 어떤 tracepoint에도 그대로 적용된다. 다만 참고 자료가 보여준 것은 "가장 대표적인 경로 하나"였고, 실제로는 인터럽트 처리 방식에 따라 여러 경로 중 하나를 탄다는 걸 이번 검색으로 확인했다.
 
 ## 다음
 
