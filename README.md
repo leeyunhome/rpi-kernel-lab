@@ -30,6 +30,7 @@ Raspberry Pi 4B에서 리눅스 커널을 직접 빌드하고, ftrace로 커널 
 
 | 문서 | 내용 |
 |---|---|
+| [`docs/용어정리.md`](docs/용어정리.md) | **용어·약어 풀이** — GIC, IPI, MSI, DTB, softirq 등. 다른 문서에서 모르는 용어가 나오면 여기부터 |
 | [`docs/커널빌드_및_인터럽트디버깅.md`](docs/커널빌드_및_인터럽트디버깅.md) | 커널 소스 확보부터 빌드까지의 진행 기록과 시행착오 |
 | [`docs/function_graph_비교.md`](docs/function_graph_비교.md) | `function_graph` tracer로 `write()` 시스템콜의 커널 내부 경로 추적 |
 | [`docs/인터럽트_디스크립터_조회.md`](docs/인터럽트_디스크립터_조회.md) | 커널 패치 없이 sysfs로 `irq_desc` 조회 — IRQ 번호가 커널 버전마다 달라지는 문제 |
