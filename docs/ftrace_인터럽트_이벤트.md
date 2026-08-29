@@ -75,6 +75,47 @@ echo 1 > /sys/kernel/debug/tracing/tracing_on
 
 이번 실습 내내 명령어 일부가 잘리거나(`for f in /sys/kernel` 앞부분 소실 등) 한글 낱자가 섞여 들어가는 문제가 반복됐다. `tmux`의 `escape-time`(500, 기본값)을 확인했으나 정상이었고, 라즈베리파이는 중계 서버를 거치지 않는 단일 홉 연결이라 지연 문제도 아니었다. 화면에 `ㅊㅁ`, `ㄷ` 같은 한글 조합 낱자가 튀어나온 것으로 보아, **Windows 클라이언트 쪽 한/영 입력기(IME)가 원인**으로 추정된다. 붙여넣기 대신 직접 타이핑하니 재현되지 않았다.
 
+## 스크립트로 재현 — `scripts/irq_ftrace.sh`
+
+수동으로 한 줄씩 실행하며 문제를 다 잡은 뒤, 검증된 순서를 `scripts/irq_ftrace.sh`로 정리했다 (`sched_switch`는 기본으로 끄도록 만들어, 위에서 겪은 버퍼 flood를 원천 차단). 실행 후 절차:
+
+```bash
+sudo bash /home/manager/irq_ftrace.sh
+# 스크립트가 tracing_off -> 이벤트 재설정 -> tracing_on 순으로 진행하고,
+# 마지막에 확인용 명령어를 화면에 출력해준다.
+
+# "설정했다"고 믿지 않고 실제 값을 읽어서 확인
+sudo cat /sys/kernel/debug/tracing/events/irq/irq_handler_entry/enable  # -> 1
+sudo cat /sys/kernel/debug/tracing/events/irq/irq_handler_exit/enable   # -> 1
+sudo cat /sys/kernel/debug/tracing/tracing_on                          # -> 1
+
+# 5초 정도 기다린 뒤 로그 확인 (sched_switch가 꺼져 있어 안전하게 파이프 사용 가능)
+cat /sys/kernel/debug/tracing/trace | tail -60
+```
+
+## 발견 — 규칙적으로 반복되는 IPI
+
+이번 캡처에서 `<idle>-0` (CPU3)이 `irq=2 name=IPI`를 아주 규칙적인 간격으로 계속 받는 패턴이 나왔다:
+
+```
+<idle>-0 [003] d.h1. 170653.340747: irq_handler_entry: irq=2 name=IPI
+<idle>-0 [003] dNh1. 170653.340767: irq_handler_exit:  irq=2 ret=handled
+<idle>-0 [003] d.h1. 170653.340952: irq_handler_entry: irq=2 name=IPI
+<idle>-0 [003] dNh1. 170653.340970: irq_handler_exit:  irq=2 ret=handled
+<idle>-0 [003] d.h1. 170653.341157: irq_handler_entry: irq=2 name=IPI
+...
+```
+
+**핸들러 실행 시간 계산** (직접 계산, 검산 완료):
+
+```
+0.000020 = 170653.340767 - 170653.340747   (IPI, 20마이크로초)
+```
+
+entry 시각 간격도 거의 일정하다 (340747 → 340952 → 341157, 약 200~205마이크로초 간격). CPU3이 idle 상태인데도 다른 코어로부터 주기적으로 뭔가를 요청받고 있다는 뜻 — 정확한 발신 주체는 추가 확인이 필요하지만, 스케줄러의 로드밸런싱이나 타이머 관련 코어 간 동기화로 추정된다.
+
+같은 캡처에서 `arch_timer`(IRQ 11)는 **네 코어 모두에서 같은 마이크로초에 동시에** entry가 찍혔다 — 각 코어가 독립적인 자기 타이머를 갖고 있어서 스케줄러 틱이 코어별로 동시에 울리기 때문이다 (`/proc/interrupts`에서 `arch_timer`가 코어별로 고르게 분산돼 있던 것과 같은 현상을 시간축에서 재확인한 것).
+
 ## 다음
 
 - 5.7.3: 참고 자료는 커널 패치로 핸들러 함수 이름(`bcm2835_mbox_irq` 등)을 알아내지만, 물리 접근 불가로 패치는 못 한다. 대신 `function_graph` tracer를 `__handle_irq_event_percpu` 함수에 걸어 같은 정보를 재빌드 없이 확인할 예정.
