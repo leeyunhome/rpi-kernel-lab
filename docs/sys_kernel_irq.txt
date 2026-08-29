@@ -1,0 +1,47 @@
+IRQ   CHIP                             HWIRQ    TYPE     ACTIONS                        COUNT(CPU0-3)
+1     GICv2                            0        edge     IPI                            33593,34612,37086,34447
+2     GICv2                            1        edge     IPI                            753802,6005328,9510916,6925116
+3     GICv2                            2        edge     IPI                            0,0,0,0
+4     GICv2                            3        edge     IPI                            0,0,0,0
+5     GICv2                            4        edge     IPI                            0,0,0,0
+6     GICv2                            5        edge     IPI                            599168,193957,322807,239300
+7     GICv2                            6        edge     IPI                            0,0,0,0
+8     GICv2                            7        edge     IPI                            0,0,0,0
+9     GICv2                            25       level    vgic                           0,0,0,0
+11    GICv2                            30       level    arch_timer                     35184758,3930157,4691210,4136591
+12    GICv2                            27       level    kvm guest vtimer               0,0,0,0
+14    GICv2                            65       level    fe00b880.mailbox               87022,0,0,0
+15    GICv2                            114      level    DMA IRQ                        327,0,0,0
+21    GICv2                            122      level    DMA IRQ                        0,0,0,0
+22    GICv2                            123      level    DMA IRQ                        0,0,0,0
+23    GICv2                            128      edge     (null)                         0,0,0,0
+24    GICv2                            145      level    (null)                         0,0,0,0
+25    GICv2                            146      level    (null)                         0,0,0,0
+26    GICv2                            180      level    (null)                         0,0,0,0
+27    GICv2                            175      level    PCIe PME,aerdrv                0,0,0,0
+28    GICv2                            189      level    eth0                           26530725,0,0,0
+29    GICv2                            190      level    eth0                           197030,0,0,0
+30    BRCM STB PCIe MSI                524288   edge     xhci_hcd                       76,0,0,0
+34    GICv2                            66       level    VCHIQ doorbell                 112,0,0,0
+35    GICv2                            48       level    arm-pmu                        0,0,0,0
+36    GICv2                            49       level    arm-pmu                        0,0,0,0
+37    GICv2                            50       level    arm-pmu                        0,0,0,0
+38    GICv2                            51       level    arm-pmu                        0,0,0,0
+39    GICv2                            153      level    uart-pl011                     4030,0,0,0
+40    GICv2                            158      level    mmc1,mmc0                      1178571,0,0,0
+41    GICv2                            129      level    vc4 hvs                        0,0,0,0
+42    interrupt-controller@7ef00100    4        level    vc4 hdmi hpd connected         0,0,0,0
+43    interrupt-controller@7ef00100    5        level    vc4 hdmi hpd disconnected      0,0,0,0
+44    interrupt-controller@7ef00100    1        level    vc4 hdmi cec rx                0,0,0,0
+45    interrupt-controller@7ef00100    0        level    vc4 hdmi cec tx                0,0,0,0
+46    interrupt-controller@7ef00100    10       level    vc4 hdmi hpd connected         0,0,0,0
+47    interrupt-controller@7ef00100    11       level    vc4 hdmi hpd disconnected      0,0,0,0
+48    interrupt-controller@7ef00100    7        level    vc4 hdmi cec rx                0,0,0,0
+49    interrupt-controller@7ef00100    8        level    vc4 hdmi cec tx                0,0,0,0
+50    GICv2                            106      level    v3d                            14,0,0,0
+51    GICv2                            107      level    fe004000.txp                   0,0,0,0
+52    GICv2                            141      level    vc4 crtc                       0,0,0,0
+53    GICv2                            142      level    vc4 crtc,vc4 crtc              0,0,0,0
+54    GICv2                            133      level    vc4 crtc                       0,0,0,0
+55    GICv2                            138      level    vc4 crtc                       0,0,0,0
+56    GICv2                            130      level    feb00000.codec                 0,0,0,0

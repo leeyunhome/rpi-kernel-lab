@@ -1,0 +1,44 @@
+           CPU0       CPU1       CPU2       CPU3       
+  9:          0          0          0          0     GICv2  25 Level     vgic
+ 11:   35184639    3930064    4691098    4136487     GICv2  30 Level     arch_timer
+ 12:          0          0          0          0     GICv2  27 Level     kvm guest vtimer
+ 14:      87022          0          0          0     GICv2  65 Level     fe00b880.mailbox
+ 15:        327          0          0          0     GICv2 114 Level     DMA IRQ
+ 21:          0          0          0          0     GICv2 122 Level     DMA IRQ
+ 22:          0          0          0          0     GICv2 123 Level     DMA IRQ
+ 27:          0          0          0          0     GICv2 175 Level     PCIe PME, aerdrv
+ 28:   26530552          0          0          0     GICv2 189 Level     eth0
+ 29:     197014          0          0          0     GICv2 190 Level     eth0
+ 30:         76          0          0          0  BRCM STB PCIe MSI 524288 Edge      xhci_hcd
+ 34:        112          0          0          0     GICv2  66 Level     VCHIQ doorbell
+ 35:          0          0          0          0     GICv2  48 Level     arm-pmu
+ 36:          0          0          0          0     GICv2  49 Level     arm-pmu
+ 37:          0          0          0          0     GICv2  50 Level     arm-pmu
+ 38:          0          0          0          0     GICv2  51 Level     arm-pmu
+ 39:       4030          0          0          0     GICv2 153 Level     uart-pl011
+ 40:    1178566          0          0          0     GICv2 158 Level     mmc1, mmc0
+ 41:          0          0          0          0     GICv2 129 Level     vc4 hvs
+ 42:          0          0          0          0  interrupt-controller@7ef00100   4 Level     vc4 hdmi hpd connected
+ 43:          0          0          0          0  interrupt-controller@7ef00100   5 Level     vc4 hdmi hpd disconnected
+ 44:          0          0          0          0  interrupt-controller@7ef00100   1 Level     vc4 hdmi cec rx
+ 45:          0          0          0          0  interrupt-controller@7ef00100   0 Level     vc4 hdmi cec tx
+ 46:          0          0          0          0  interrupt-controller@7ef00100  10 Level     vc4 hdmi hpd connected
+ 47:          0          0          0          0  interrupt-controller@7ef00100  11 Level     vc4 hdmi hpd disconnected
+ 48:          0          0          0          0  interrupt-controller@7ef00100   7 Level     vc4 hdmi cec rx
+ 49:          0          0          0          0  interrupt-controller@7ef00100   8 Level     vc4 hdmi cec tx
+ 50:         14          0          0          0     GICv2 106 Level     v3d
+ 51:          0          0          0          0     GICv2 107 Level     fe004000.txp
+ 52:          0          0          0          0     GICv2 141 Level     vc4 crtc
+ 53:          0          0          0          0     GICv2 142 Level     vc4 crtc, vc4 crtc
+ 54:          0          0          0          0     GICv2 133 Level     vc4 crtc
+ 55:          0          0          0          0     GICv2 138 Level     vc4 crtc
+ 56:          0          0          0          0     GICv2 130 Level     feb00000.codec
+IPI0:     33583      34605      37079      34439       Rescheduling interrupts
+IPI1:    753759    6005253    9510799    6925025       Function call interrupts
+IPI2:         0          0          0          0       CPU stop interrupts
+IPI3:         0          0          0          0       CPU stop NMIs
+IPI4:         0          0          0          0       Timer broadcast interrupts
+IPI5:    599168     193957     322807     239300       IRQ work interrupts
+IPI6:         0          0          0          0       CPU backtrace interrupts
+IPI7:         0          0          0          0       KGDB roundup interrupts
+Err:          0
