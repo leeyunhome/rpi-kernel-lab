@@ -1,0 +1,5 @@
+# 커널 소스·빌드 산출물은 저장소에 포함하지 않음 (수백MB~수GB)
+linux/
+build_out/
+*.img
+rpi_build_log.txt
