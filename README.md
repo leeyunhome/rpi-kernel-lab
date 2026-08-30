@@ -35,6 +35,7 @@ Raspberry Pi 4B에서 리눅스 커널을 직접 빌드하고, ftrace로 커널 
 | [`docs/function_graph_비교.md`](docs/function_graph_비교.md) | `function_graph` tracer로 `write()` 시스템콜의 커널 내부 경로 추적 |
 | [`docs/인터럽트_디스크립터_조회.md`](docs/인터럽트_디스크립터_조회.md) | 커널 패치 없이 sysfs로 `irq_desc` 조회 — IRQ 번호가 커널 버전마다 달라지는 문제 |
 | [`docs/ftrace_인터럽트_이벤트.md`](docs/ftrace_인터럽트_이벤트.md) | ftrace `irq_handler_entry`/`exit`로 핸들러 실행 시간 측정, 이전 실습들과 교차 검증 |
+| [`docs/irq_스레드.md`](docs/irq_스레드.md) | IRQ 스레드 확인·우선순위 소스 추적·실제 실행 여부 검증 (6장) |
 | [`docs/proc_interrupts.txt`](docs/proc_interrupts.txt) · [`docs/sys_kernel_irq.txt`](docs/sys_kernel_irq.txt) | 위 문서의 원본 데이터 |
 
 ## 빌드
